@@ -4,6 +4,7 @@ import pickle
 
 #komentarz dla testu
 #komentarz dla testu 2
+#Orzysz wbija fireballem hoga na mete
 
 graczid = {
     1: "remikulek",
