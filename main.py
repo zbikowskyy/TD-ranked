@@ -2,10 +2,6 @@ import sqlite3 as sql
 import pickle
 #[nazwa, zagrane, wygrane, elo]
 
-#komentarz dla testu
-#komentarz dla testu 2
-#Orzysz wbija fireballem hoga na mete
-
 graczid = {
     1: "remikulek",
     2: "michsza",
