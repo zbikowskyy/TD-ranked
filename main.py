@@ -1,4 +1,5 @@
 import sqlite3 as sql
+import pickle
 #[nazwa, zagrane, wygrane, elo]
 
 graczid = {
@@ -14,6 +15,8 @@ graczid = {
     10: "wojtekcola",
     11: "Wojtek"
 }
+
+copy = lambda obj: pickle.loads(pickle.dumps(obj))
 
 class Player:
     def __init__(self, name=""):
@@ -100,12 +103,13 @@ class Game:
             print(nazwa)
             player = Player()
             player.load_player(nazwa)
-            self.gracze.append(nazwa)
+            self.gracze.append(player)
         self.wygrani = [self.gracze[0], self.gracze[1]]
         self.przegrani = [self.gracze[2], self.gracze[3]]
 
     def __str__(self):
-        return f"Nr gry: {self.nr: < 3}, Wygrani: {self.wygrani[0].getnameElo()}, {self.wygrani[1].getnameElo()}, Przegrani: {self.przegrani[0].getnameElo()}, {self.przegrani[1].getnameElo()}"
+        return f"Nr gry: {self.nr: < 3}, Wygrani: {self.wygrani[0].getnameElo()}, {self.wygrani[1].getnameElo()}, " \
+               f"Przegrani: {self.przegrani[0].getnameElo()}, {self.przegrani[1].getnameElo()}"
 
     def evaluategame(self):
         elowygranych = self.wygrani[0].elo + self.wygrani[1].elo
@@ -244,5 +248,4 @@ if __name__ == "__main__":
     #]
 
     #dziennegry(Game([3, 4, 5, 1]), calc=1)
-    #detailedstats()
-    addbackplayers()
+    detailedstats()
