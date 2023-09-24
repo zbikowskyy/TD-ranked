@@ -1,6 +1,8 @@
 import sqlite3 as sql
 #[nazwa, zagrane, wygrane, elo]
 
+#komentarz dla testu
+
 graczid = {
     1: "remikulek",
     2: "michsza",
