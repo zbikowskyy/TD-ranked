@@ -3,6 +3,7 @@ import pickle
 #[nazwa, zagrane, wygrane, elo]
 
 #komentarz dla testu
+#komentarz dla testu 2
 
 graczid = {
     1: "remikulek",
