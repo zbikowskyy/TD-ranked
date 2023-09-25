@@ -2,7 +2,7 @@ import sqlite3 as sql
 import pickle
 #[nazwa, zagrane, wygrane, elo]
 
-graczid = {
+graczid = { #tlumacz id na nazwy bo latwiej
     1: "remikulek",
     2: "michsza",
     3: "ItsAllGese",
@@ -16,10 +16,10 @@ graczid = {
     11: "Wojtek"
 }
 
-copy = lambda obj: pickle.loads(pickle.dumps(obj))
+copy = lambda obj: pickle.loads(pickle.dumps(obj)) #kopia klasy funkcja
 
-class Player:
-    def __init__(self, name=""):
+class Player:#klasa gracz
+    def __init__(self, name=""): #przy nowej instancji
         self.name = name
         self.wygrane = 0
         self.zagrane = 0
@@ -30,55 +30,55 @@ class Player:
         except:
             self.winrate = 0
 
-    def __str__(self):
+    def __str__(self):#przy print() zeby statystyki
         return f"Nazwa: {self.name : <20}, Zagrane gry: {self.zagrane : <5}, Wygrane gry: {self.wygrane : <5}, Winrate: {str(self.winrate)[:4] : <5}, Elo: {str(self.elo)[:6] : <20}".ljust(25)
 
-    def insert_player(self):
+    def insert_player(self): #dodaje gracza do db
         connection = sql.connect("Touchdownplayers.db")
-        cursor = connection.cursor()
+        cursor = connection.cursor() #lacze z db
 
         cursor.execute("""
         INSERT INTO gracze VALUES
         ('{}', 0, 0, 100)
-        """.format(self.name))
+        """.format(self.name)) #daje defaultowe staty
 
         connection.commit()
-        connection.close()
+        connection.close()#zamkniecie lacza
 
-    def load_player(self, nazwa):
-        self.name = nazwa
+    def load_player(self, nazwa):#pobiera dane z db
+        self.name = nazwa #zmienic zeby bralo id
         connection = sql.connect("Touchdownplayers.db")
-        cursor = connection.cursor()
+        cursor = connection.cursor()#lacze z db
 
         cursor.execute("""
         SELECT * FROM gracze
         WHERE nazwa = '{}'
         """.format(nazwa))
 
-        results = cursor.fetchone()
+        results = cursor.fetchone() #pobranie z db danych
 
         self.zagrane = results[1]
         self.wygrane = results[2]
         self.elo = results[3]
 
         try:
-            self.winrate = self.wygrane / self.zagrane
+            self.winrate = self.wygrane / self.zagrane #winrate
         except:
             self.winrate = 0
 
         connection.close()
 
-    def addgames(self, zagrane, wygrane):
+    def addgames(self, zagrane, wygrane): #ustawia staty po grach ###CHYBA DO ZMIANY NOY SHURE
         connection = sql.connect("Touchdownplayers.db")
-        cursor = connection.cursor()
+        cursor = connection.cursor()#lacze z db
 
         cursor.executescript("""
         UPDATE gracze SET zagrane = {} WHERE nazwa = '{}';
         UPDATE gracze SET wygrane = {} WHERE nazwa = '{}';
-        """.format(self.zagrane + zagrane, self.name, self.wygrane + wygrane, self.name))
+        """.format(self.zagrane + zagrane, self.name, self.wygrane + wygrane, self.name))#update win/lose
 
         connection.commit()
-        connection.close()
+        connection.close()#koniec lacza
 
         self.wygrane += wygrane
         self.zagrane += zagrane
@@ -88,63 +88,64 @@ class Player:
         except:
             self.winrate = 0
 
-    def getnameElo(self):
+    def getnameElo(self):#daje nazwe i elo ###chyba useless
         return f"{self.name: <15} - {self.elo: <5}"
 
-class Game:
-    def __init__(self, ids):
+class Game:#klasa gry
+    def __init__(self, ids): #ids = lista id graczy [wygrany, wygrany, przegrany, przegrany]
         self.nr = 0
         self.gracze = []
 
         nazwy = []
-        for i in ids: nazwy.append(graczid[i])
+        for i in ids: nazwy.append(graczid[i]) #nazwy z id
 
-        for nazwa in nazwy:
+        for nazwa in nazwy:#twory liste graczy jako klasy
             print(nazwa)
             player = Player()
             player.load_player(nazwa)
             self.gracze.append(player)
-        self.wygrani = [self.gracze[0], self.gracze[1]]
+
+        self.wygrani = [self.gracze[0], self.gracze[1]]#dzieli ta liste na dwie nowe
         self.przegrani = [self.gracze[2], self.gracze[3]]
 
-    def __str__(self):
+    def __str__(self): #do print()
         return f"Nr gry: {self.nr: < 3}, Wygrani: {self.wygrani[0].getnameElo()}, {self.wygrani[1].getnameElo()}, " \
                f"Przegrani: {self.przegrani[0].getnameElo()}, {self.przegrani[1].getnameElo()}"
 
-    def evaluategame(self):
+    def evaluategame(self): #kalkulacja gry
         elowygranych = self.wygrani[0].elo + self.wygrani[1].elo
         eloprzegranych = self.przegrani[0].elo + self.przegrani[1].elo
 
         try: dif = eloprzegranych / elowygranych
-        except: dif = 0
+        except: dif = 0 #roznica
 
         multipliyer = 0.2 * dif * dif + dif  # y = 0.2x^2 + x
-        print(multipliyer)
+        print(multipliyer)#mnoznik
 
         self.wygrani[0].elo += 20 * elowygranych     / self.wygrani[0].elo * multipliyer  # druzyna lacznie zyskuje 20*mnoznik a przegrana tyle traci
         self.wygrani[1].elo += 20 * elowygranych     / self.wygrani[1].elo * multipliyer
         self.przegrani[0].elo -= 20 * eloprzegranych / self.przegrani[1].elo * multipliyer  # piekne
-        self.przegrani[1].elo -= 20 * eloprzegranych / self.przegrani[0].elo * multipliyer
+        self.przegrani[1].elo -= 20 * eloprzegranych / self.przegrani[0].elo * multipliyer #kalkulacja elo
 
         if self.przegrani[0].elo < 0: self.przegrani[0].elo = 0
-        if self.przegrani[1].elo < 0: self.przegrani[1].elo = 0
+        if self.przegrani[1].elo < 0: self.przegrani[1].elo = 0 #ustawianie elo ig
 
         connection = sql.connect("Touchdownplayers.db")
-        cursor = connection.cursor()
+        cursor = connection.cursor()#lacze z db
 
         for gracz in [self.wygrani[0], self.wygrani[1], self.przegrani[0], self.przegrani[1]]:
-            cursor.execute("UPDATE gracze SET elo = {} WHERE nazwa = '{}'".format(gracz.elo, gracz.name))
+            cursor.execute("UPDATE gracze SET elo = {} WHERE nazwa = '{}'".format(gracz.elo, gracz.name)) #update elo ###chyba sie kluci z Player.addgame()
         #monkey brain start work
 
         connection.commit()
-        connection.close()
+        connection.close()#koniec db
 
         for i in self.wygrani: i.addgames(1,1)
         for i in self.przegrani: i.addgames(1,0)
 
         self.remberstats = []
         for i in self.wygrani + self.przegrani: self.remberstats.append(i.getnameElo())
-        print(self.remberstats)
+        print(self.remberstats)#zeby mozna bylo odczytywac bez ewaluacji ale to nie ma sensuuuuuu
 
 def elo_gain(os1,os2,os3,os4):     #do zmiany     #OLDASSS
     #os1 i os2 to osoby wygrane
@@ -193,7 +194,7 @@ def addgame(osid1, osid2, osid3, osid4):                                #OLDASSS
     elo_gain(p1,p2,p3,p4)
 
 
-def detailedstats():
+def detailedstats(): #staty kazdego gracza
     for i in graczid.keys():
         playr = Player()
         playr.load_player(graczid[i])
@@ -207,14 +208,14 @@ def main():     #OLDASSS
             l.append(idgracza)
         addgame(l[0], l[1], l[2], l[3])
 
-def dziennegry(gry, calc = 0):
+def dziennegry(gry, calc = 0): #kalkualcja gier gdy calc = 1 a tak to staty gier
     if calc == 1:
         for i, game in enumerate(gry): game.nr = i + 1
         for game in gry: game.evaluategame()
 
     for game in gry: print(game)
 
-def addbackplayers():
+def addbackplayers(): #po resecie db to trza
     Player("Wojtek").insert_player()
     Player("OrzyszAnin").insert_player()
     Player("remikulek").insert_player()
