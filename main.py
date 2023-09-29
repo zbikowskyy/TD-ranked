@@ -194,7 +194,7 @@ if __name__ == "__main__":
     ]
 
     dziennegry(grydzis, calc=1)
-    detailedstats()
-=======
 
     #WEŹ MI TYLKO POWIEDZ GDZIE DOKŁADNIE NIE DZIAŁAŁO
+    dziennegry(grydzis, calc=1)
+    detailedstats()
