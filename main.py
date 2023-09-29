@@ -147,66 +147,11 @@ class Game:#klasa gry
         for i in self.wygrani + self.przegrani: self.remberstats.append(i.getnameElo())
         print(self.remberstats)#zeby mozna bylo odczytywac bez ewaluacji ale to nie ma sensuuuuuu
 
-def elo_gain(os1,os2,os3,os4):     #do zmiany     #OLDASSS
-    #os1 i os2 to osoby wygrane
-
-    elowygranych = os1.elo + os2.elo
-    eloprzegranych = os3.elo + os4.elo
-    dif = eloprzegranych/elowygranych
-
-    multipliyer = 0.2 * dif * dif + dif #y = 0.2x^2 + x
-
-    os1.elo += 20 * elowygranych / os1.elo * multipliyer  #druzyna lacznie zyskuje 20*mnoznik a przegrana tyle traci
-    os2.elo += 20 * elowygranych / os2.elo * multipliyer
-    os3.elo -= 20 * eloprzegranych / os4.elo * multipliyer  #piekne
-    os4.elo -= 20 * eloprzegranych / os3.elo * multipliyer
-
-    if os3.elo < 0: os3.elo = 0
-    if os4.elo < 0: os4.elo = 0
-
-    connection = sql.connect("Touchdownplayers.db")
-    cursor = connection.cursor()
-
-    cursor.executescript("""
-            UPDATE gracze SET elo = {} WHERE nazwa = '{}';         
-            UPDATE gracze SET elo = {} WHERE nazwa = '{}';
-            UPDATE gracze SET elo = {} WHERE nazwa = '{}';
-            UPDATE gracze SET elo = {} WHERE nazwa = '{}';
-            """.format(os1.elo, os1.name, os2.elo, os2.name, os3.elo, os3.name, os4.elo, os4.name))#bing bong ching chong
-
-    connection.commit()
-    connection.close()
-
-def addgame(osid1, osid2, osid3, osid4):                                #OLDASSS
-    p1 = Player()
-    p1.load_player(graczid[osid1])
-    p1.addgames(1,1)
-    p2 = Player()
-    p2.load_player(graczid[osid2])
-    p2.addgames(1, 1)
-    p3 = Player()
-    p3.load_player(graczid[osid3])
-    p3.addgames(1, 0)
-    p4 = Player()
-    p4.load_player(graczid[osid4])
-    p4.addgames(1, 0)
-
-    elo_gain(p1,p2,p3,p4)
-
-
 def detailedstats(): #staty kazdego gracza
     for i in graczid.keys():
         playr = Player()
         playr.load_player(graczid[i])
         print(playr)
-
-def main():     #OLDASSS
-    for _ in range(0,11):
-        l = []
-        for i in range(0,4):
-            idgracza = int(input("{} os. id: ".format(i+1)))
-            l.append(idgracza)
-        addgame(l[0], l[1], l[2], l[3])
 
 def dziennegry(gry, calc = 0): #kalkualcja gier gdy calc = 1 a tak to staty gier
     if calc == 1:
@@ -232,21 +177,21 @@ def addbackplayers(): #po resecie db to trza
 
 if __name__ == "__main__":
     #Game([idwygranych, idprzegranych])
-    #grydzis = [
-    #    Game([3, 4, 5, 1]),
-    #    Game([3, 5, 1, 6]),
-    #    Game([5, 7, 3, 10]),
-    #    Game([3, 8, 5, 6]),
-    #    Game([8, 10, 9, 5]),
-    #    Game([3, 8, 5, 6]),
-    #    Game([3, 8, 6, 5]),
-    #    Game([6, 10, 3, 8]),
-    #    Game([3, 5, 6, 8]),
-    #    Game([5, 8, 3, 6]),
-    #    Game([8, 3, 9, 6]),
-    #    Game([8, 3, 6, 9]),
-    #    Game([3, 6, 8, 1])
-    #]
+    grydzis = [
+        Game([3, 4, 5, 1]),
+        Game([3, 5, 1, 6]),
+        Game([5, 7, 3, 10]),
+        Game([3, 8, 5, 6]),
+        Game([8, 10, 9, 5]),
+        Game([3, 8, 5, 6]),
+        Game([3, 8, 6, 5]),
+        Game([6, 10, 3, 8]),
+        Game([3, 5, 6, 8]),
+        Game([5, 8, 3, 6]),
+        Game([8, 3, 9, 6]),
+        Game([8, 3, 6, 9]),
+        Game([3, 6, 8, 1])
+    ]
 
-    #dziennegry(Game([3, 4, 5, 1]), calc=1)
+    dziennegry(grydzis, calc=1)
     detailedstats()
