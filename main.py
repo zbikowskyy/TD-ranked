@@ -19,7 +19,7 @@ graczid = { #tlumacz id na nazwy bo latwiej
 copy = lambda obj: pickle.loads(pickle.dumps(obj)) #kopia klasy funkcja
 
 class Player:#klasa gracz
-    def __init__(self, name=""): #przy nowej instancji
+    def __init__(self, name=""): #przy nowej instancji (konstruktor?)
         self.name = name
         self.wygrane = 0
         self.zagrane = 0
@@ -68,7 +68,7 @@ class Player:#klasa gracz
 
         connection.close()
 
-    def addgames(self, zagrane, wygrane): #ustawia staty po grach ###CHYBA DO ZMIANY NOY SHURE
+    def addgames(self, zagrane, wygrane): #ustawia staty po grach ###CHYBA DO ZMIANY NOY SHURE (TO POTRZEBNE NAPEWNO?)
         connection = sql.connect("Touchdownplayers.db")
         cursor = connection.cursor()#lacze z db
 
@@ -195,3 +195,6 @@ if __name__ == "__main__":
 
     dziennegry(grydzis, calc=1)
     detailedstats()
+=======
+
+    #WEŹ MI TYLKO POWIEDZ GDZIE DOKŁADNIE NIE DZIAŁAŁO
