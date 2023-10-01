@@ -79,7 +79,7 @@ class Player:#klasa gracz
         connection.commit()
         connection.close()
 
-    def changeelo(self, newelo):
+    def changeelo(self, newelo): ####jeszcze nie uzyte
         connection = sql.connect("Touchdownplayers.db")
         cursor = connection.cursor()  # lacze z db
 
@@ -91,7 +91,7 @@ class Player:#klasa gracz
         connection.close()  # koniec lacza
         self.elo = newelo
 
-    def changestats(self, newelo, win = True): #ustawia staty po grach ###CHYBA DO ZMIANY NOY SHURE (TO POTRZEBNE NAPEWNO?)
+    def changestats(self, newelo, win = True):
         connection = sql.connect("Touchdownplayers.db")
         cursor = connection.cursor()#lacze z db
 
@@ -99,7 +99,7 @@ class Player:#klasa gracz
         if win: self.wygrane += 1
 
         self.wipeplayer()
-        self.insert_player(zagrane=self.zagrane, wygrane=self.wygrane, elo=self.elo)
+        self.insert_player(zagrane=self.zagrane, wygrane=self.wygrane, elo=newelo)
 
         connection.commit()
         connection.close()#koniec lacza
@@ -196,9 +196,3 @@ if __name__ == "__main__":
     ]
     dziennegry(grydzis, calc=1)
 
-
-
-#TODO
-#zmienic zeby gracze bralo id
-#zmienic system kalkulacji gier
-#zmienic system updateu graczy
