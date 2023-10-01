@@ -19,16 +19,12 @@ graczid = { #tlumacz id na nazwy bo latwiej
 copy = lambda obj: pickle.loads(pickle.dumps(obj)) #kopia klasy funkcja
 
 class Player:#klasa gracz
-    def __init__(self, name=""): #przy nowej instancji (konstruktor?)
-        self.name = name
-        self.wygrane = 0
-        self.zagrane = 0
-        self.elo = 100
-        self.przegrane = self.zagrane - self.wygrane
-        try:
-            self.winrate = self.wygrane / self.przegrane
-        except:
-            self.winrate = 0
+    def __init__(self, id, load=1): #przy nowej instancji (konstruktor?)
+        self.id = id
+
+        if load:
+            self.load_player(graczid[id])
+
 
     def __str__(self):#przy print() zeby statystyki
         return f"Nazwa: {self.name : <20}, Zagrane gry: {self.zagrane : <5}, Wygrane gry: {self.wygrane : <5}, Winrate: {str(self.winrate)[:4] : <5}, Elo: {str(self.elo)[:6] : <20}".ljust(25)
@@ -38,9 +34,8 @@ class Player:#klasa gracz
         cursor = connection.cursor() #lacze z db
 
         cursor.execute("""
-        INSERT INTO gracze VALUES
-        ('{}', 0, 0, 100)
-        """.format(self.name)) #daje defaultowe staty
+        INSERT INTO gracze VALUES ('{}', 0, 0, 100)
+        """.format(graczid[self.id])) #daje defaultowe staty
 
         connection.commit()
         connection.close()#zamkniecie lacza
@@ -161,22 +156,15 @@ def dziennegry(gry, calc = 0): #kalkualcja gier gdy calc = 1 a tak to staty gier
     for game in gry: print(game)
 
 def addbackplayers(): #po resecie db to trza
-    Player("Wojtek").insert_player()
-    Player("OrzyszAnin").insert_player()
-    Player("remikulek").insert_player()
-    Player("michsza").insert_player()
-    Player("ItsAllGese").insert_player()
-    Player("WeCanScrapTheS").insert_player()
-    Player("InfernoDragon").insert_player()
-    Player("apeliator").insert_player()
-    Player("interboypl").insert_player()
-    Player("BurgerConsumer3").insert_player()
-    Player("wojtekcola").insert_player()
-
+    for i in graczid.keys():
+        print(f"Dodaje gracza id {i}")
+        x = Player(i, load = 0)
+        x.insert_player()
 
 
 if __name__ == "__main__":
     #Game([idwygranych, idprzegranych])
+    """
     grydzis = [
         Game([3, 4, 5, 1]),
         Game([3, 5, 1, 6]),
@@ -192,9 +180,9 @@ if __name__ == "__main__":
         Game([8, 3, 6, 9]),
         Game([3, 6, 8, 1])
     ]
+    """
 
-    dziennegry(grydzis, calc=1)
-
-    #WEŹ MI TYLKO POWIEDZ GDZIE DOKŁADNIE NIE DZIAŁAŁO
-    dziennegry(grydzis, calc=1)
-    detailedstats()
+#TODO
+#zmienic zeby gracze bralo id
+#zmienic system kalkulacji gier
+#zmienic system updateu graczy

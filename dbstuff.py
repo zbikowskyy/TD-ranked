@@ -1,10 +1,9 @@
 import sqlite3 as sql
 
-connection = sql.connect ('Touchdownplayers.db')
-
-cursor = connection.cursor()
-
 def tablegracze():
+    connection = sql.connect('Touchdownplayers.db')
+    cursor = connection.cursor()
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS gracze (
         nazwa TEXT,
@@ -14,12 +13,24 @@ def tablegracze():
     )
     """)
 
+    connection.commit()
+    connection.close()
+
 def cleargracze():
+    connection = sql.connect('Touchdownplayers.db')
+    cursor = connection.cursor()
+
     cursor.execute("""
     DELETE FROM gracze
     """)
 
+    connection.commit()
+    connection.close()
+
 def tablegraczesee():
+    connection = sql.connect('Touchdownplayers.db')
+    cursor = connection.cursor()
+
     cursor.execute("""
     SELECT * FROM gracze
     """)
@@ -29,23 +40,25 @@ def tablegraczesee():
             print(str(item).ljust(20), end='')
         print()
 
-TDRM = {
-    1: tablegracze(),
-    2: cleargracze(),
-    3: tablegraczesee()
-}
+    connection.commit()
+    connection.close()
 
 if __name__ == "__main__":
     print("========== TDR management console ==========\n"
           "1: Zregenerowanie tabeli statystyk graczy\n"
           "2: Usuniecie wszystkiego z tabeli graczy\n"
           "3: Pokazanie statystyk wszystkich graczy\n")
-    kmd = input("Komenda: ")
 
     try:
-        TDRM[int(kmd)]
-    except:
-        print("Zla komenda")
+        kmd = int(input("Komenda: "))
+    except ValueError:
+        kmd = 99
 
-connection.commit()
-connection.close()
+    if kmd == 1:
+        tablegracze()
+    elif kmd == 2:
+        cleargracze()
+    elif kmd == 3:
+        tablegraczesee()
+    else:
+        print("Zla komenda")
