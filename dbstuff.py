@@ -36,7 +36,7 @@ def tablegraczesee():
     """)
 
     for sublist in cursor.fetchall():
-        for i, item in enumerate(sublist):
+        for _, item in enumerate(sublist):
             print(str(item).ljust(20), end='')
         print()
 

@@ -1,5 +1,6 @@
 import sqlite3 as sql
 import pickle
+from dbstuff import cleargracze
 #[nazwa, zagrane, wygrane, elo]
 
 graczid = { #tlumacz id na nazwy bo latwiej
@@ -16,8 +17,13 @@ graczid = { #tlumacz id na nazwy bo latwiej
     11: "Wojtek"
 }
 
-copy = lambda obj: pickle.loads(pickle.dumps(obj)) #kopia klasy funkcja
-clamp = lambda n, minn, maxn: max(min(maxn, n), minn) #limit min i max
+def clamp(n, min, max):
+    if n < min:
+        return min
+    elif n > max:
+        return max
+    else:
+        return n
 
 class Player:#klasa gracz
     def __init__(self, id, load=1): #przy nowej instancji (konstruktor?)
@@ -33,7 +39,7 @@ class Player:#klasa gracz
                f"Zagrane gry: {self.zagrane : <5}, " \
                f"Wygrane gry: {self.wygrane : <5}, " \
                f"Winrate: {str(self.winrate)[:4] : <5}, " \
-               f"Elo: {str(self.elo)[:6] : <20}" #nietykac
+               f"Elo: {str(int(self.elo))[:6] : <20}" #nietykac
 
     def insert_player(self, zagrane = 0, wygrane = 0, elo = 100): #dodaje gracza do db
         connection = sql.connect("Touchdownplayers.db")
@@ -85,7 +91,7 @@ class Player:#klasa gracz
 
         cursor.execute("""
         UPDATE gracze SET elo = {} WHERE nazwa = '{}'
-        """.format(newelo, self.name))
+        """.format(int(newelo), self.name))
 
         connection.commit()
         connection.close()  # koniec lacza
@@ -99,7 +105,7 @@ class Player:#klasa gracz
         if win: self.wygrane += 1
 
         self.wipeplayer()
-        self.insert_player(zagrane=self.zagrane, wygrane=self.wygrane, elo=newelo)
+        self.insert_player(zagrane=self.zagrane, wygrane=self.wygrane, elo=int(newelo))
 
         connection.commit()
         connection.close()#koniec lacza
@@ -111,7 +117,7 @@ class Player:#klasa gracz
 
 
     def getnameElo(self):#daje nazwe i elo ###chyba useless
-        return f"{self.name: <15} - {self.elo: <5}" ######TYMCZASOWE WYLACZENIE Z UZYTKU
+        return f"{self.name: <15} - {int(self.elo): <5}" ######TYMCZASOWE WYLACZENIE Z UZYTKU
 
 class Game:#klasa gry
     def __init__(self, ids): #ids = lista id graczy [wygrany, wygrany, przegrany, przegrany]
@@ -126,29 +132,33 @@ class Game:#klasa gry
         self.przegrani = [self.gracze[2], self.gracze[3]]
 
     def __str__(self): #do print()
-        return f"Nr gry: {self.nr: < 3}, Wygrani: {self.wygrani[0].getnameElo()}, {self.wygrani[1].getnameElo()}, " \
+        return f"Nr gry: {self.nr: < 3}, Wygrani: {self.wygrani[0].getnameElo()}, {self.wygrani[1].getnameElo()}; " \
                f"Przegrani: {self.przegrani[0].getnameElo()}, {self.przegrani[1].getnameElo()}"
 
     def evaluategame(self): #kalkulacja gry
+        self.update()
         elolist = [self.wygrani[0].elo, self.wygrani[1].elo, self.przegrani[0].elo, self.przegrani[1].elo]
+        print(f'elolist: {elolist}')
         elowygranych = elolist[0] + elolist[1]
         eloprzegranych = elolist[2] + elolist[3]
 
-        if elowygranych == 0:
-            if eloprzegranych == 0: dif = 1
-            else: dif = 2
-        else:
-            dif = clamp(eloprzegranych / elowygranych, 0, 2)
+        dif = eloprzegranych / elowygranych
+        if dif > 2: dif = 2
 
-        multiplier = 0.2 * dif * dif + dif  # y = 0.2x^2 + x
-        print(multiplier)#mnoznik
+        multiplier = 0.2 * dif + dif  # y = 0.2x^2 + x
+        print(f"mnoznik: {multiplier}")#mnoznik
 
-        elolist[0] += 20 * elowygranych   / elolist[0] * multiplier  # druzyna lacznie zyskuje 20*mnoznik a przegrana tyle traci
-        elolist[1] += 20 * elowygranych   / elolist[1] * multiplier
-        elolist[2] -= 20 * eloprzegranych / elolist[3] * multiplier  # piekne
-        elolist[3] -= 20 * eloprzegranych / elolist[2] * multiplier #kalkulacja elo
+        copy = elolist[2]
 
-        print(elolist)
+        elolist[0] += clamp(20 + (1 + (elowygranych   / elolist[0])) * multiplier,0, 80)  # druzyna lacznie zyskuje 20*mnoznik a przegrana tyle traci
+        elolist[1] += clamp(20 + (1 + (elowygranych   / elolist[1])) * multiplier,0, 80)
+        elolist[2] -= clamp(20 + (1 + (eloprzegranych / elolist[3])) * multiplier,0, 80)  # piekne
+        elolist[3] -= clamp(20 + (1 + (eloprzegranych / copy)) * multiplier,0, 80) #kalkulacja elo
+
+        if elolist[2] < 1: elolist[2] = 1
+        if elolist[3] < 1: elolist[3] = 1
+
+        print(f"elolistnew: {elolist}\n")
 
         self.wygrani[0].changestats(newelo=elolist[0])
         self.wygrani[1].changestats(newelo=elolist[1])
@@ -156,18 +166,27 @@ class Game:#klasa gry
         self.przegrani[1].changestats(newelo=elolist[3], win=False)
         #monkey brain -start- STOPPED work D:
 
+    def update(self):
+        idfk = []
+        for player in self.gracze:
+            gracz = Player(player.id)
+            idfk.append(gracz)
+
+        self.gracze = idfk
+        self.wygrani = [self.gracze[0], self.gracze[1]]  # dzieli ta liste na dwie nowe
+        self.przegrani = [self.gracze[2], self.gracze[3]]
+
 
 def detailedstats(): #staty kazdego gracza
-    for i in graczid.keys():
-        playr = Player()
-        playr.load_player(graczid[i])
+    print("-" * 100)
+    for id in graczid.keys():
+        playr = Player(id)
         print(playr)
+        print("-"*100)
 
-def dziennegry(gry, calc = 0): #kalkualcja gier gdy calc = 1 a tak to staty gier
-    if calc == 1:
-        for i, game in enumerate(gry): game.nr = i + 1
-        for game in gry: game.evaluategame()
-
+def dziennegry(gry): #kalkualcja gier gdy calc = 1 a tak to staty gier
+    for i, game in enumerate(gry): game.nr = i + 1
+    for game in gry: game.evaluategame()
     for game in gry: print(game)
 
 def addbackplayers(): #po resecie db to trza
@@ -178,6 +197,7 @@ def addbackplayers(): #po resecie db to trza
 
 if __name__ == "__main__":
     #Game([idwygranych, idprzegranych])
+    addbackplayers()
 
     grydzis = [
         Game([3, 4, 5, 1]),
@@ -194,5 +214,7 @@ if __name__ == "__main__":
         Game([8, 3, 6, 9]),
         Game([3, 6, 8, 1])
     ]
-    dziennegry(grydzis, calc=1)
+    dziennegry(grydzis)
+    print("")
+    detailedstats()
 
